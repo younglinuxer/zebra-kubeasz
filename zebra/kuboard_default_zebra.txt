@@ -1,0 +1,560 @@
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: default
+  name: mysql
+  annotations:
+    k8s.kuboard.cn/workload: mysql
+    k8s.kuboard.cn/displayName: mysql
+    deployment.kubernetes.io/revision: '1'
+    k8s.kuboard.cn/ingress: 'false'
+    k8s.kuboard.cn/service: ClusterIP
+  labels:
+    k8s.kuboard.cn/layer: db
+    k8s.kuboard.cn/name: mysql
+spec:
+  selector:
+    matchLabels:
+      k8s.kuboard.cn/layer: db
+      k8s.kuboard.cn/name: mysql
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:
+        k8s.kuboard.cn/layer: db
+        k8s.kuboard.cn/name: mysql
+    spec:
+      securityContext:
+        seLinuxOptions: {}
+      imagePullSecrets: []
+      restartPolicy: Always
+      initContainers: []
+      containers:
+        - image: 'nacos/nacos-mysql:5.7'
+          imagePullPolicy: Always
+          name: mysql
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+            - name: mysql-config
+              mountPath: /etc/mysql/conf.d/my.cnf
+              subPath: my.cnf
+          resources:
+            limits:
+            requests:
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-conf
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-conf
+                  key: MYSQL_DATABASE
+            - name: MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-conf
+                  key: MYSQL_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-conf
+                  key: MYSQL_PASSWORD
+          lifecycle: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      volumes:
+        - name: mysql-data
+          nfs:
+            server: 192.168.71.130
+            path: /data/nfs/mysql
+        - name: mysql-config
+          configMap:
+            name: mysql-conf
+            defaultMode: 420
+            items: []
+      dnsPolicy: ClusterFirst
+      dnsConfig: {}
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  replicas: 1
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: mysql
+  annotations:
+    k8s.kuboard.cn/workload: mysql
+    k8s.kuboard.cn/displayName: mysql
+  labels:
+    k8s.kuboard.cn/layer: db
+    k8s.kuboard.cn/name: mysql
+spec:
+  selector:
+    k8s.kuboard.cn/layer: db
+    k8s.kuboard.cn/name: mysql
+  type: ClusterIP
+  ports:
+    - port: 3306
+      targetPort: 3306
+      protocol: TCP
+      name: ryzhbx
+      nodePort: 0
+  sessionAffinity: None
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: default
+  name: rabbitmq
+  annotations:
+    k8s.kuboard.cn/workload: rabbitmq
+    k8s.kuboard.cn/displayName: rabbitmq
+    deployment.kubernetes.io/revision: '1'
+    k8s.kuboard.cn/ingress: 'false'
+    k8s.kuboard.cn/service: ClusterIP
+  labels:
+    k8s.kuboard.cn/layer: cloud
+    k8s.kuboard.cn/name: rabbitmq
+spec:
+  selector:
+    matchLabels:
+      k8s.kuboard.cn/layer: cloud
+      k8s.kuboard.cn/name: rabbitmq
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:
+        k8s.kuboard.cn/layer: cloud
+        k8s.kuboard.cn/name: rabbitmq
+    spec:
+      securityContext:
+        seLinuxOptions: {}
+      imagePullSecrets: []
+      restartPolicy: Always
+      initContainers: []
+      containers:
+        - image: 'docker.io/bitnami/rabbitmq:3.8-debian-10'
+          imagePullPolicy: Always
+          name: rabbitmq
+          volumeMounts: []
+          resources:
+            limits:
+            requests:
+          env: []
+          envFrom:
+            - configMapRef:
+                name: rabbitmq-conf
+          lifecycle: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      volumes: []
+      dnsPolicy: ClusterFirst
+      dnsConfig: {}
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  replicas: 1
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: rabbitmq
+  annotations:
+    k8s.kuboard.cn/workload: rabbitmq
+    k8s.kuboard.cn/displayName: rabbitmq
+  labels:
+    k8s.kuboard.cn/layer: cloud
+    k8s.kuboard.cn/name: rabbitmq
+spec:
+  selector:
+    k8s.kuboard.cn/layer: cloud
+    k8s.kuboard.cn/name: rabbitmq
+  type: ClusterIP
+  ports:
+    - port: 5672
+      targetPort: 5672
+      protocol: TCP
+      name: w46tnn
+      nodePort: 0
+    - port: 15672
+      targetPort: 15672
+      protocol: TCP
+      name: 5ezzxd
+      nodePort: 0
+  sessionAffinity: None
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: default
+  name: redis
+  annotations:
+    k8s.kuboard.cn/workload: redis
+    k8s.kuboard.cn/displayName: redis
+    deployment.kubernetes.io/revision: '2'
+    k8s.kuboard.cn/ingress: 'false'
+    k8s.kuboard.cn/service: ClusterIP
+  labels:
+    k8s.kuboard.cn/layer: cloud
+    k8s.kuboard.cn/name: redis
+spec:
+  selector:
+    matchLabels:
+      k8s.kuboard.cn/layer: cloud
+      k8s.kuboard.cn/name: redis
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:
+        k8s.kuboard.cn/layer: cloud
+        k8s.kuboard.cn/name: redis
+    spec:
+      securityContext:
+        seLinuxOptions: {}
+      imagePullSecrets: []
+      restartPolicy: Always
+      initContainers: []
+      containers:
+        - image: 'redis:5.0.8'
+          imagePullPolicy: Always
+          name: redis
+          volumeMounts:
+            - name: redis-conf
+              mountPath: /etc/redis/redis.conf
+              subPath: redis.conf
+          command:
+            - redis-server
+          resources:
+            limits:
+            requests:
+          env: []
+          lifecycle: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      volumes:
+        - name: redis-conf
+          configMap:
+            name: redis-conf
+            defaultMode: 420
+            items: []
+      dnsPolicy: ClusterFirst
+      dnsConfig: {}
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  replicas: 1
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: redis
+  annotations:
+    k8s.kuboard.cn/workload: redis
+    k8s.kuboard.cn/displayName: redis
+  labels:
+    k8s.kuboard.cn/layer: cloud
+    k8s.kuboard.cn/name: redis
+spec:
+  selector:
+    k8s.kuboard.cn/layer: cloud
+    k8s.kuboard.cn/name: redis
+  type: ClusterIP
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+      name: zydnme
+      nodePort: 0
+  sessionAffinity: None
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: default
+  name: zebra-nacos
+  annotations:
+    k8s.kuboard.cn/workload: zebra-nacos
+    k8s.kuboard.cn/displayName: zebra-nacos
+    deployment.kubernetes.io/revision: '2'
+    k8s.kuboard.cn/ingress: 'false'
+    k8s.kuboard.cn/service: NodePort
+  labels:
+    k8s.kuboard.cn/layer: cloud
+    k8s.kuboard.cn/name: zebra-nacos
+spec:
+  selector:
+    matchLabels:
+      k8s.kuboard.cn/layer: cloud
+      k8s.kuboard.cn/name: zebra-nacos
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:
+        k8s.kuboard.cn/layer: cloud
+        k8s.kuboard.cn/name: zebra-nacos
+    spec:
+      securityContext:
+        seLinuxOptions: {}
+      imagePullSecrets: []
+      restartPolicy: Always
+      initContainers: []
+      containers:
+        - image: 'younglinuxer/nacos:jck'
+          imagePullPolicy: Always
+          name: zebra-nacos
+          volumeMounts: []
+          resources:
+            limits:
+            requests:
+          env: []
+          envFrom:
+            - configMapRef:
+                name: naocos-env
+          lifecycle: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      volumes: []
+      dnsPolicy: ClusterFirst
+      dnsConfig: {}
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  replicas: 1
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: zebra-nacos
+  annotations:
+    k8s.kuboard.cn/workload: zebra-nacos
+    k8s.kuboard.cn/displayName: zebra-nacos
+  labels:
+    k8s.kuboard.cn/layer: cloud
+    k8s.kuboard.cn/name: zebra-nacos
+spec:
+  selector:
+    k8s.kuboard.cn/layer: cloud
+    k8s.kuboard.cn/name: zebra-nacos
+  type: NodePort
+  ports:
+    - port: 8848
+      targetPort: 8848
+      protocol: TCP
+      name: smdkrz
+      nodePort: 8848
+  sessionAffinity: None
+
+---
+metadata:
+  name: mysql-conf
+  namespace: default
+  managedFields:
+    - manager: Mozilla
+      operation: Update
+      apiVersion: v1
+      time: '2021-07-13T08:53:20Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:data':
+          .: {}
+          'f:MYSQL_DATABASE': {}
+          'f:MYSQL_PASSWORD': {}
+          'f:MYSQL_ROOT_PASSWORD': {}
+          'f:MYSQL_USER': {}
+          'f:my.cnf': {}
+data:
+  MYSQL_DATABASE: nacos_devtest
+  MYSQL_PASSWORD: nacos
+  MYSQL_ROOT_PASSWORD: root
+  MYSQL_USER: nacos
+  my.cnf: |-
+    [mysqld]
+
+    init_connect='SET collation_connection = utf8_unicode_ci'
+    init_connect='SET NAMES utf8'
+    character-set-server=utf8
+    collation-server=utf8_unicode_ci
+    skip-character-set-client-handshake
+kind: ConfigMap
+apiVersion: v1
+
+---
+metadata:
+  name: naocos-env
+  namespace: default
+  managedFields:
+    - manager: Mozilla
+      operation: Update
+      apiVersion: v1
+      time: '2021-07-13T09:15:47Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:data':
+          .: {}
+          'f:JVM_MS': {}
+          'f:JVM_XMN': {}
+          'f:JVM_XMS': {}
+          'f:JVM_XMX': {}
+          'f:MODE': {}
+          'f:MYSQL_SERVICE_DB_NAME': {}
+          'f:MYSQL_SERVICE_HOST': {}
+          'f:MYSQL_SERVICE_PASSWORD': {}
+          'f:MYSQL_SERVICE_PORT': {}
+          'f:MYSQL_SERVICE_USER': {}
+          'f:PREFER_HOST_MODE': {}
+          'f:SPRING_DATASOURCE_PLATFORM': {}
+data:
+  JVM_MS: 512m
+  JVM_XMN: 1024m
+  JVM_XMS: 1024m
+  JVM_XMX: 1024m
+  MODE: standalone
+  MYSQL_SERVICE_DB_NAME: nacos_devtest
+  MYSQL_SERVICE_HOST: mysql
+  MYSQL_SERVICE_PASSWORD: nacos
+  MYSQL_SERVICE_PORT: '3306'
+  MYSQL_SERVICE_USER: nacos
+  PREFER_HOST_MODE: hostname
+  SPRING_DATASOURCE_PLATFORM: mysql
+kind: ConfigMap
+apiVersion: v1
+
+---
+metadata:
+  name: rabbitmq-conf
+  namespace: default
+  managedFields:
+    - manager: Mozilla
+      operation: Update
+      apiVersion: v1
+      time: '2021-07-13T09:11:53Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:data':
+          .: {}
+          'f:RABBITMQ_PASSWORD': {}
+          'f:RABBITMQ_USERNAME': {}
+          'f:RABBITMQ_VHOST': {}
+data:
+  RABBITMQ_PASSWORD: admin
+  RABBITMQ_USERNAME: admin
+  RABBITMQ_VHOST: /zebra-dev
+kind: ConfigMap
+apiVersion: v1
+
+---
+metadata:
+  name: redis-conf
+  namespace: default
+  managedFields:
+    - manager: Mozilla
+      operation: Update
+      apiVersion: v1
+      time: '2021-07-13T09:10:44Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:data':
+          .: {}
+          'f:redis.conf': {}
+data:
+  redis.conf: |-
+    bind 0.0.0.0
+    protected-mode yes
+    port 6379
+    tcp-backlog 511
+    timeout 0
+    tcp-keepalive 300
+    daemonize no
+    supervised no
+    loglevel notice
+    databases 16
+    always-show-logo yes
+    save 900 1
+    save 300 10
+    save 60 10000
+    stop-writes-on-bgsave-error yes
+    rdbcompression yes
+    rdbchecksum yes
+    dbfilename dump.rdb
+    replica-serve-stale-data yes
+    replica-read-only yes
+    repl-diskless-sync no
+    repl-diskless-sync-delay 5
+    repl-disable-tcp-nodelay no
+    replica-priority 100
+    lazyfree-lazy-eviction no
+    lazyfree-lazy-expire no
+    lazyfree-lazy-server-del no
+    replica-lazy-flush no
+    appendonly no
+    appendfilename "appendonly.aof"
+    appendfsync everysec
+    no-appendfsync-on-rewrite no
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+    aof-load-truncated yes
+    aof-use-rdb-preamble yes
+    lua-time-limit 5000
+    slowlog-log-slower-than 10000
+    slowlog-max-len 128
+    latency-monitor-threshold 0
+    notify-keyspace-events ""
+    hash-max-ziplist-entries 512
+    hash-max-ziplist-value 64
+    list-max-ziplist-size -2
+    list-compress-depth 0
+    set-max-intset-entries 512
+    zset-max-ziplist-entries 128
+    zset-max-ziplist-value 64
+    hll-sparse-max-bytes 3000
+    stream-node-max-bytes 4096
+    stream-node-max-entries 100
+    activerehashing yes
+    client-output-buffer-limit normal 0 0 0
+    client-output-buffer-limit replica 256mb 64mb 60
+    client-output-buffer-limit pubsub 32mb 8mb 60
+    hz 10
+    dynamic-hz yes
+    aof-rewrite-incremental-fsync yes
+    rdb-save-incremental-fsync yes
+kind: ConfigMap
+apiVersion: v1
+
