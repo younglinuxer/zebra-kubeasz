@@ -1,0 +1,86 @@
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: default
+  name: zebra-nacos
+  annotations:
+    k8s.kuboard.cn/workload: zebra-nacos
+    k8s.kuboard.cn/displayName: zebra-nacos
+    deployment.kubernetes.io/revision: '2'
+    k8s.kuboard.cn/ingress: 'false'
+    k8s.kuboard.cn/service: NodePort
+  labels:
+    k8s.kuboard.cn/layer: cloud
+    k8s.kuboard.cn/name: zebra-nacos
+spec:
+  selector:
+    matchLabels:
+      k8s.kuboard.cn/layer: cloud
+      k8s.kuboard.cn/name: zebra-nacos
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:
+        k8s.kuboard.cn/layer: cloud
+        k8s.kuboard.cn/name: zebra-nacos
+    spec:
+      securityContext:
+        seLinuxOptions: {}
+      imagePullSecrets: []
+      restartPolicy: Always
+      initContainers: []
+      containers:
+        - image: 'younglinuxer/nacos:jck'
+          imagePullPolicy: Always
+          name: zebra-nacos
+          volumeMounts: []
+          resources:
+            limits:
+            requests:
+          env: []
+          envFrom:
+            - configMapRef:
+                name: naocos-env
+          lifecycle: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      volumes: []
+      dnsPolicy: ClusterFirst
+      dnsConfig: {}
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  replicas: 1
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: zebra-nacos
+  annotations:
+    k8s.kuboard.cn/workload: zebra-nacos
+    k8s.kuboard.cn/displayName: zebra-nacos
+  labels:
+    k8s.kuboard.cn/layer: cloud
+    k8s.kuboard.cn/name: zebra-nacos
+spec:
+  selector:
+    k8s.kuboard.cn/layer: cloud
+    k8s.kuboard.cn/name: zebra-nacos
+  type: NodePort
+  ports:
+    - port: 8848
+      targetPort: 8848
+      protocol: TCP
+      name: smdkrz
+      nodePort: 8848
+  sessionAffinity: None
+

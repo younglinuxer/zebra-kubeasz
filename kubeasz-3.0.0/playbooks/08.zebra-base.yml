@@ -1,0 +1,5 @@
+# to install clust-addons
+- hosts:
+  - kube_master
+  roles:
+  - zebra-base

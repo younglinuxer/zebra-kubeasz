@@ -1,0 +1,17 @@
+- name: 导入zebra-configmaps
+  shell: "{{ base_dir }}/bin/kubectl apply -f {{ base_dir }}/roles/zebra-base/templates/configmaps"
+  run_once: true
+  connection: local
+
+- name: 解压基础数据库
+  unarchive : src={{ base_dir }}/roles/zebra-base/files/zebra-mysql.tgz dest=/data/nfs
+
+- name: 部署 mysql redis rabbitmq..
+  shell: "{{ base_dir }}/bin/kubectl apply -f {{ base_dir }}/roles/zebra-base/templates/zebra-mysql"
+  run_once: true
+  connection: local
+
+- name: 解压基础数据库
+  shell: "{{ base_dir }}/bin/kubectl apply -f {{ base_dir }}/roles/zebra-base/templates/zebra-nacos"
+  run_once: true
+  connection: local
