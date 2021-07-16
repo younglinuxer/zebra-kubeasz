@@ -380,6 +380,13 @@ function del-master() {
 }
 
 
+function zebra-base() {
+  set +u
+  cd $BASE
+  #部署 zebra-base 基础服务
+  ansible-playbook -i clusters/default/hosts  -e clusters/default/config.yml  playbooks/08.zebra-base.yml
+}
+
 function start-aio(){
     set +u
     # Check ENV 'HOST_IP', exists if the CMD 'ezctl' running in a docker container
@@ -573,6 +580,10 @@ function main() {
       (destroy)
           [ "$#" -eq 2 ] || { usage >&2; exit 2; }
           cmd "$2" destroy
+          ;;
+      (zebra-base)
+          [ "$#" -eq 1 ] || { usage >&2; exit 2; }
+          zebra-base
           ;;
       (start-aio)
           [ "$#" -eq 1 ] || { usage >&2; exit 2; }

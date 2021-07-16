@@ -11,7 +11,7 @@
   run_once: true
   connection: local
 
-- name: 解压基础数据库
+- name: 部署nacos
   shell: "{{ base_dir }}/bin/kubectl apply -f {{ base_dir }}/roles/zebra-base/templates/zebra-nacos"
   run_once: true
   connection: local
